@@ -1,7 +1,7 @@
 {
   "name": "pacopack",
-  "version": "1.0.0",
-  "description": "Fast purejs schemaless/dictionarydriven serializer",
+  "version": "1.0.2",
+  "description": "Pure JS binary schemaless and dictionary-driven serialization focused on performance, small payloads and JSON.stringify/parse easy replacement.",
   "types": "./types/index.d.ts",
   "browser": "./lib/pacopack.browser.js",
   "main": "./lib/pacopack",
@@ -9,12 +9,20 @@
     "import": "./lib/pacopack.mjs",
     "require": "./lib/pacopack.js"
   },
+  "files": [
+    "lib/",
+    "types/"
+  ],
   "scripts": {
     "watch": "npx tsc --watch --inlineSourcemap",
     "build": "npx rollup -c"
   },
   "author": "Llorx",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/llorx/pacopack"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.3",
     "@rollup/plugin-inject": "^4.0.4",

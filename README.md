@@ -9,8 +9,11 @@ Pure JS binary schemaless and dictionary-driven serialization focused on perform
 
 ## Motivation
 I needed a pure JS and easy library to serialize any object to a `Buffer`, but without the hassle of using `JSON.stringify` and then converting the resulting string to a `Buffer`, as it feels like wasting tons of CPU cycles.
+
 I started to look some schemaless libraries around and they all had different problems, like *MessagePack* not feeling that fast or *sializer* not having a growing `Buffer`.
+
 I ended with `v8.serialize`, which is acceptably fast, but it had a major flaw for me: [Is not deterministic](https://github.com/nodejs/help/issues/2448).
+
 After all this, I created Pac-o-Pack, which features:
 
 - Pure JS.
