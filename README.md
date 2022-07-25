@@ -56,7 +56,7 @@ new PacoPack(options?, dictionary?, toJSON?);
 instance.serialize(data, offset?, slice?);
 ```
 - `data`: Any Serializable: all primitives, `Map`, `Set`, `RegExp`, `Buffer`, `Date` and objects implementing the `toJSON` method if the flag is enabled.
-- `offset`: Add extra initial padding to the resulting `Buffer` to write your data and avoid creating another `Buffer` and copying the data, for example, reserve the first 4 bytes to write the size of the `Buffer` before sending it to a socket, or to add your own flags.
+- `offset`: Add extra initial padding to the resulting `Buffer` to write your data and avoid creating another `Buffer` and copying the data. For example to reserve the first 4 bytes to write the size of the `Buffer` before sending it to a socket, or to add your own flags.
 - `slice`: By default Pac-o-Pack will copy the internal `Buffer` to a new one, to avoid data corruption if the resulting `Buffer` is accessed after calling `serialize()` again. If you know what you are doing and assure that the `Buffer` is not going to be accessed, you can enable this flag. **Boosts peformance even more**, but do not use under uncontrolably environments, like sending the `Buffer` to a socket, as the data *may* be copied by the SO or Node.JS for the socket to send it, or *may* not until an uncertain future, and you *may* call `serialize()` again, overwriting this `Buffer` before it is actually sent.
 
 ```typescript
@@ -78,4 +78,4 @@ When `mapKeys` option is enabled, this method will clear the string map both on 
 PacoPack.OptimizeStrings(milliseconds?);
 ```
 Pac-o-Pack has some pure JS methods to serialize and deserialize strings that are faster than native `Buffer` ones, but up to a point. It uses one method or another depending on the string length to work with. Pac-o-Pack comes with some generic values for this, but depends on your CPU when is better to use one or another. This method will do a test and update those values so the serializer/deserializer is optimized to squeeze your CPU to the max.
-- `milliseconds`: The amount of milliseconds to spend on the optimization. This will block the thread this amount of time.
+- `milliseconds`: The amount of milliseconds to spend on the optimization. This will block the thread this amount of time. Defaults to **300**.
