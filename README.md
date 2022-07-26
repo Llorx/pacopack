@@ -1,6 +1,7 @@
 
 <p align="center">
-    <img align="center" src="https://i.ibb.co/zhJFW6Y/logo.png">
+    <img align="center" src="https://raw.githubusercontent.com/Llorx/pacopack/main/res/logo.png#gh-light-mode-only">
+    <img align="center" src="https://raw.githubusercontent.com/Llorx/pacopack/main/res/logo_white.png#gh-dark-mode-only">
 </p>
 
 ---
