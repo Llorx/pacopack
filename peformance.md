@@ -3,8 +3,8 @@
 Here I'm going to explain in detail what performance methods/workarounds Pac-o-Pack is using, so you can benefit for your project and/or you know what is happening under the hood.
 
 ---
-[1.- String map](#1--string-map)
-[2.- Map optimization](#1--map-optimization)
+[1.- String map](#1--string-map)  
+[2.- Map optimization](#1--map-optimization)  
 **[...] WIP**
 
 ---
