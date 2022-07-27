@@ -27,6 +27,7 @@
     "@rollup/plugin-commonjs": "^21.0.3",
     "@rollup/plugin-inject": "^4.0.4",
     "@rollup/plugin-typescript": "^8.3.0",
+    "benchmark": "^2.1.4",
     "rollup": "^2.67.3",
     "rollup-plugin-dts": "^4.1.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
