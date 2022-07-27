@@ -4,7 +4,7 @@ Here I'm going to explain in detail what performance methods/workarounds Pac-o-P
 
 ---
 [1.- String map](#1--string-map)  
-[2.- Map optimization](#1--map-optimization)  
+[2.- Map optimization](#2--map-optimization)  
 **[...] WIP**
 
 ---
