@@ -5,15 +5,16 @@ Here I'm going to explain in detail what performance methods/workarounds Pac-o-P
 ---
 [1.- String map](#1--string-map)  
 [2.- Map optimization](#2--map-optimization)  
+[3.- String map prepopulation](#3--string-map-prepopulation)  
 **[...] WIP**
 
 ---
 ### 1.- String map
-One of the worse CPU consuming operations when serializing and deserializing data in JavaScript is strings processing. Pac-o-Pack contains a string map for object keys, so when a string happens more than once in the same serialization, the first time is aliased to a number and the next times only the number alias is used. With this, the resulting `Buffer` and also the amount of CPU cycles to retrieve the string are considerably reduced.
+One of the worse CPU consuming operations when serializing and deserializing data in JavaScript is string processing. Pac-o-Pack contains a string map for object keys, so when a string happens more than once in the same serialization, the first time is aliased to a number and the next times only the number alias is used. With this, the resulting `Buffer` and also the amount of CPU cycles to retrieve the string are considerably reduced.
 
 If you enable the `mapKeys` option, this behaviour is held between serializations, so only the first time that an object is serialized the object keys are processed as strings, and the next times only the aliases are serialized. You can prepopulate this internal map with the constructor's `dictionary` argument.
 
-To optimize the internal string-alias map, Pac-o-Pack uses a workaround described in the point 2.
+To optimize the internal string-alias map, Pac-o-Pack uses a workaround described in the point 2 and to optimize the prepopulation of this map with the dictionary, uses a method described in the point 3.
 
 ### 2.- Map optimization
 In JavaScript there are some ways to create a key-value map. The old-school one is to create an object and fill it with key-values, so you can ask for keys in the future:
@@ -61,7 +62,7 @@ There's a way to have a slightly faster key query in plain objects than `Map` wh
 
 Plain objects in V8 are faster than `Map` when accessing keys for some detailed reasons (hidden classes and such), so we are going to abuse this. In objects you can set as key strings, numbers (which are converted to strings) and `Symbol`s. `Symbol`s are unique and cannot be replicated in the entire JavaScript engine if you don't allow for it, so is impossible that the prototype of a plain object contains a specific `Symbol` of your property.
 
-With this we can do a thing. Instead of asking an object for the key 2 times (one with `hasOwnProperty` and the other when requesting the value), we can set a specific object which has a specific `Symbol`, so we can check for that `Symbol` directly. If there's no `Symbol`, you will receive `undefined`. Exactly the same as `Map` does. Here's the code:
+With this we can do a thing: Instead of asking an object for the key 2 times (one with `hasOwnProperty` and the other when requesting the value), we can set a specific object which has a specific `Symbol`, so we can check for that `Symbol` directly. If there's no `Symbol`, you will receive `undefined`. Exactly the same as `Map` does. Here's the code:
 ```javascript
 const S = Symbol();
 const map = {};
@@ -107,36 +108,36 @@ for (let i = 0; i < 100; i++) { // About 100 keys indexed
 }
 
 const suite = new Benchmark.Suite();
-suite.add("objectMap", () => {
-    const res = {}; // Simulate an object being recreated using a dictionary
-    for (const key of keys) {
-        if (objectMap.hasOwnProperty(key)) {
-            const value = objectMap[key];
-            res[value] = true;
-        }
-    }
-}).add("map", () => {
-    const res = {};
+suite.add("map", () => {
+    let total = 0;
     for (const key of keys) {
         const value = map.get(key);
         if (value !== undefined) {
-            res[value] = true;
+            total += value;
         }
     }
 }).add("map.has", () => {
-    const res = {};
+    let total = 0;
     for (const key of keys) {
         if (map.has(key)) {
             const value = map.get(key);
-            res[value] = true;
+            total += value;
+        }
+    }
+}).add("objectMap", () => {
+    let total = 0;
+    for (const key of keys) {
+        if (Object.hasOwnProperty.call(objectMap, key)) {
+            const value = objectMap[key];
+            total += value;
         }
     }
 }).add("objectMapSymbol", () => {
-    const res = {};
+    let total = 0;
     for (const key of keys) {
         const value = objectMapSymbol[key]?.[S];
         if (value !== undefined) {
-            res[value] = true;
+            total += value;
         }
     }
 }).on("cycle", (event) => {
@@ -144,17 +145,20 @@ suite.add("objectMap", () => {
 }).run({ "async": true });
 ```
 After a run missing 1 of each 10 queries (10%), I got:
-> map x 533,613 ops/sec ±0.29% (95 runs sampled)  
-> map.has x 344,309 ops/sec ±0.17% (95 runs sampled)  
-> objectMap x 242,727 ops/sec ±0.19% (90 runs sampled)  
-> objectMapSymbol x 566,064 ops/sec ±0.25% (98 runs sampled)  
+> map x 677,289 ops/sec ±0.43% (93 runs sampled)  
+> map.has x 455,393 ops/sec ±0.23% (96 runs sampled)  
+> objectMap x 530,387 ops/sec ±0.31% (97 runs sampled)  
+> objectMapSymbol x 736,398 ops/sec ±0.27% (99 runs sampled)  
 
 _objectMapSymbol_ performs slightly better than _map_, but this depends a lot on the amounts of hits or misses. If you increase the amount of misses up to 1 of each 3 queries (33%) the results vary:
-> map x 532,144 ops/sec ±0.27% (97 runs sampled)  
-> map.has x 376,795 ops/sec ±0.07% (95 runs sampled)  
-> objectMap x 230,244 ops/sec ±0.35% (97 runs sampled)  
-> objectMapSymbol x 532,465 ops/sec ±0.21% (97 runs sampled)  
+> map x 746,020 ops/sec ±0.40% (95 runs sampled)  
+> map.has x 528,721 ops/sec ±0.32% (95 runs sampled)  
+> objectMap x 527,488 ops/sec ±0.36% (96 runs sampled)  
+> objectMapSymbol x 759,708 ops/sec ±0.10% (99 runs sampled)  
 
 They start to equalize, but with Pac-o-Pack the objective is to have near 0 misses, using dictionaries (almost mandatory) and/or the `mapKey` option (depending on your use case), so I'm keeping my _objectMapSymbol_ method.
+
+### 3.- String map prepopulation
+When a dictionary is defined, it is parsed to create a dictionary object which contains the list of words with the internal map format using the `Symbol` described above. When a new plain string map object is created, instead of creating a plain object that has the default prototype pointing to `Object`, it is created with `Object.create()` and pointing its prototype to the dictionary object that we created. When a miss query happens, JavaScript will go though the prototype (the dictionary in this case) to look for the key again. This way we don't need to prepopulate the string map by mapping each key with a spread operator or `Object.assign` on each reset, which is slow, and we also don't need to check on one map, and when a miss happens, look on another map, which is way slower than letting JavaScript do that very same job via the prototype chain.
 
 **[...] WIP**
