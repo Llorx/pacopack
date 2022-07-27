@@ -25,8 +25,6 @@ const enum OPCODES {
     strkey_single,
     string_single,
     regexp,
-    utf8_quad = 0b10000000,
-    utf8_quad_reverse = 0b01111111,
 
     number      = 0b10000000, // 1 bit (number) + 3 bits (opcode) + 1 bit (negative) + 3 bits (bytes)
     bigint      = 0b11000000,
@@ -145,7 +143,7 @@ export class PacoPack<TO_JSON extends boolean = false> {
     }
     private _resetReceiveStringMap() {
         if (this.dictionary) {
-            this._receiveStrMap = {...this.dictionary.dictionary}; // Numeric keys is better to spread than Object.create
+            this._receiveStrMap = {...this.dictionary.dictionary}; // For numeric keys, is better to spread than Object.create
             this._receiveStrMapIndex = this.dictionary.total;
         } else {
             this._receiveStrMap = {};
@@ -237,21 +235,34 @@ export class PacoPack<TO_JSON extends boolean = false> {
                 case OPCODES.string_single: {
                     let size = buffer[this._receivePos];
                     let n = buffer[this._receivePos + 1];
-                    let isQuad = size & OPCODES.utf8_quad;
-                    size &= OPCODES.utf8_quad_reverse;
-                    const str = UTF8.toString(buffer, this._receivePos + 2, size, n, isQuad);
+                    const str = UTF8.toString(buffer, this._receivePos + 2, size, n);
                     this._receivePos += 2 + n;
                     return str as T;
                 }
                 case OPCODES.strkey_single: { // Almost duplicated to avoid branches
                     let size = buffer[this._receivePos];
                     let n = buffer[this._receivePos + 1];
-                    let isQuad = size & OPCODES.utf8_quad;
-                    size &= OPCODES.utf8_quad_reverse;
-                    const str = this._receiveStrMap[this._receiveStrMapIndex++] = UTF8.toString(buffer, this._receivePos + 2, size, n, isQuad);
+                    const str = this._receiveStrMap[this._receiveStrMapIndex++] = UTF8.toString(buffer, this._receivePos + 2, size, n);
                     //this._receiveStrMap.set(this._receiveStrMapIndex++, str);
                     this._receivePos += 2 + n;
                     return str as T;
+                }
+                case OPCODES.object_start: {
+                    let obj:{[key:string]:Serializables} = {};
+                    while(buffer[this._receivePos] !== OPCODES.object_end) {
+                        let k = this._read<string>(buffer);
+                        obj[k] = this._read(buffer);
+                    }
+                    this._receivePos++;
+                    return obj as T;
+                }
+                case OPCODES.array_start: {
+                    let arr:Serializables[] = [];
+                    while(buffer[this._receivePos] !== OPCODES.array_end) {
+                        arr.push(this._read(buffer));
+                    }
+                    this._receivePos++;
+                    return arr as T;
                 }
                 case OPCODES.null: {
                     return null as T;
@@ -282,23 +293,6 @@ export class PacoPack<TO_JSON extends boolean = false> {
                         f += "u";
                     }
                     return new RegExp(r, f) as T;
-                }
-                case OPCODES.array_start: {
-                    let arr:Serializables[] = [];
-                    while(buffer[this._receivePos] !== OPCODES.array_end) {
-                        arr.push(this._read(buffer));
-                    }
-                    this._receivePos++;
-                    return arr as T;
-                }
-                case OPCODES.object_start: {
-                    let obj:{[key:string]:Serializables} = {};
-                    while(buffer[this._receivePos] !== OPCODES.object_end) {
-                        let k = this._read<string>(buffer);
-                        obj[k] = this._read(buffer);
-                    }
-                    this._receivePos++;
-                    return obj as T;
                 }
                 case OPCODES.set_start: {
                     let set = new Set<Serializables>();
@@ -479,7 +473,7 @@ export class PacoPack<TO_JSON extends boolean = false> {
             }
             let res = UTF8.toBuffer(str, this._buffer, this._pos + 3);
             if (res.isQuad) {
-                size += OPCODES.utf8_quad;
+                size = 0xFF;
             }
             this._buffer[this._pos + 1] = size;
             this._buffer[this._pos + 2] = res.size;

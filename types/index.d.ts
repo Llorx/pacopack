@@ -10,7 +10,7 @@ declare class UTF8 {
         size: number;
         isQuad: boolean;
     };
-    static toString(buffer: Buffer, offset: number, stringLength: number, bufferLength: number, isQuad: boolean | number): string;
+    static toString(buffer: Buffer, offset: number, stringLength: number, bufferLength: number): string;
 }
 
 declare type Dictionary = {

@@ -1,4 +1,6 @@
-import { performance } from "perf_hooks";
+if (typeof performance === "undefined") {
+    performance = require("perf_hooks").performance;
+}
 
 export default class UTF8 {
     static MAX_1BYTE_UTF8 = 256 / 4;
@@ -10,7 +12,21 @@ export default class UTF8 {
         optimizeStrings(ms);
     }
     static byteLength(str:string) {
-        return byteLength(str);
+        let s = str.length;
+        for (let i = str.length-1; i >= 0; i--) {
+            let code = str.charCodeAt(i);
+            if (code > 0x7f) {
+                if (code < 0x800) {
+                    s++;
+                } else if (code < 0x10000) {
+                    s += 2;
+                }
+                if (code >= 0xDC00 && code < 0xE000) {
+                    i--;
+                }
+            }
+        }
+        return s;
     }
     static toBuffer(str:string, buffer:Buffer, offset:number) {
         if (str.length <= UTF8.TO_BUFFER_MAX) {
@@ -22,9 +38,9 @@ export default class UTF8 {
             isQuad: true
         };
     }
-    static toString(buffer:Buffer, offset:number, stringLength:number, bufferLength:number, isQuad:boolean|number) {
-        if (isQuad || stringLength > UTF8.TO_STRING_FUNCS_MAX) {
-            if (stringLength <= UTF8.TO_STRING_MAX) {
+    static toString(buffer:Buffer, offset:number, stringLength:number, bufferLength:number) {
+        if (stringLength > UTF8.TO_STRING_FUNCS_MAX) {
+            if (bufferLength <= UTF8.TO_STRING_MAX) {
                 return toString(buffer, offset, offset + bufferLength);
             }
             return buffer.toString("utf8", offset, offset + bufferLength);
@@ -114,23 +130,6 @@ function toBuffer(str:string, buffer:Buffer, offset:number) {
     }
     return { size: offset - start, isQuad: quad };
 }
-function byteLength(str:string) {
-    let s = str.length;
-    for (let i = str.length-1; i >= 0; i--) {
-        let code = str.charCodeAt(i);
-        if (code > 0x7f) {
-            if (code < 0x800) {
-                s++;
-            } else if (code < 0x10000) {
-                s+=2;
-            }
-            if (code >= 0xDC00 && code < 0xE000) {
-                i--;
-            }
-        }
-    }
-    return s;
-}
 
 function iterationOtimizerLoop<T extends any[]>(cb:(...args:T) => void, ...args:T) {
     let totals = 0;
@@ -189,7 +188,7 @@ function optimizeStrings(ms = 300) {
     UTF8.BYTELENGTH_MAX = stringIterationOtimizer(() => {}, str => {
         Buffer.byteLength(str);
     }, str => {
-        byteLength(str);
+        UTF8.byteLength(str);
     }, ms);
     UTF8.TO_STRING_MAX = stringIterationOtimizer(str => {
         return Buffer.from(str);

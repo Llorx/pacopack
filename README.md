@@ -25,7 +25,7 @@ After all this, I created Pac-o-Pack, which features:
 - Along to all primitive types (including differentiated `null` and `undefined`), allows to serialize/deserialize: `Map`, `Set`, `RegExp`, `Buffer` and `Date`.
 
 ## Performance
-Pac-o-Pack *abuses* JavaScript and includes multiple features to reduce the amount of CPU cycles to both serialize and deserialize the data. More details in: [peformance.md](peformance.md).
+Pac-o-Pack *abuses* JavaScript and includes multiple features to reduce the amount of CPU cycles to both serialize and deserialize the data. **More details in: [peformance.md](peformance.md).**
 
 ## Installation
 ```
@@ -58,7 +58,7 @@ instance.serialize(data, offset?, slice?);
 ```
 - `data`: Any Serializable: all primitives, `Map`, `Set`, `RegExp`, `Buffer`, `Date` and objects implementing the `toJSON` method if the flag is enabled.
 - `offset`: Add extra initial padding to the resulting `Buffer` to write your data and avoid creating another `Buffer` and copying the data. For example to reserve the first 4 bytes to write the size of the `Buffer` before sending it to a socket, or to add your own flags.
-- `slice`: By default Pac-o-Pack will copy the internal `Buffer` to a new one, to avoid data corruption if the resulting `Buffer` is accessed after calling `serialize()` again. If you know what you are doing and assure that the `Buffer` is not going to be accessed, you can enable this flag. **Boosts peformance even more**, but do not use under uncontrolably environments, like sending the `Buffer` to a socket, as the data *may* be copied by the SO or Node.JS for the socket to send it, or *may* not until an uncertain future, and you *may* call `serialize()` again, overwriting this `Buffer` before it is actually sent.
+- `slice`: By default Pac-o-Pack will copy the internal `Buffer` to a new one, to avoid data corruption if the resulting `Buffer` is accessed after calling `serialize()` again. If you know what you are doing and assure that the `Buffer` is not going to be accessed, you can enable this flag. **Boosts peformance even more**, but do not use under uncontrolably environments, like sending the `Buffer` to a socket, as the data *may* be copied by the SO or NodeJS for the socket to send it, or *may* not until an uncertain future, and you *may* call `serialize()` again, overwriting this `Buffer` before it is actually sent.
 
 ```typescript
 instance.deserialize(buffer);

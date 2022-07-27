@@ -107,7 +107,7 @@ for (let i = 0; i < 10000000; i++) {
 console.timeEnd("buffer.toString");
 console.time("UTF8.toString");
 for (let i = 0; i < 10000000; i++) {
-    UTF8.toString(buffer, 0, emoji.length, buffer.length, false);
+    UTF8.toString(buffer, 0, emoji.length, buffer.length);
 }
 console.timeEnd("UTF8.toString");
 let s2 = toCodePointBuffer(emoji, buffer, 0);
