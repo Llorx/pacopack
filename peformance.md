@@ -144,16 +144,16 @@ suite.add("objectMap", () => {
 }).run({ "async": true });
 ```
 After a run missing 1 of each 10 queries (10%), I got:
-> map x 533,613 ops/sec ±0.29% (95 runs sampled)
-> map.has x 344,309 ops/sec ±0.17% (95 runs sampled)
-> objectMap x 242,727 ops/sec ±0.19% (90 runs sampled)
-> objectMapSymbol x 566,064 ops/sec ±0.25% (98 runs sampled)
+> map x 533,613 ops/sec ±0.29% (95 runs sampled)  
+> map.has x 344,309 ops/sec ±0.17% (95 runs sampled)  
+> objectMap x 242,727 ops/sec ±0.19% (90 runs sampled)  
+> objectMapSymbol x 566,064 ops/sec ±0.25% (98 runs sampled)  
 
 _objectMapSymbol_ performs slightly better than _map_, but this depends a lot on the amounts of hits or misses. If you increase the amount of misses up to 1 of each 3 queries (33%) the results vary:
-> map x 532,144 ops/sec ±0.27% (97 runs sampled)
-> map.has x 376,795 ops/sec ±0.07% (95 runs sampled)
-> objectMap x 230,244 ops/sec ±0.35% (97 runs sampled)
-> objectMapSymbol x 532,465 ops/sec ±0.21% (97 runs sampled)
+> map x 532,144 ops/sec ±0.27% (97 runs sampled)  
+> map.has x 376,795 ops/sec ±0.07% (95 runs sampled)  
+> objectMap x 230,244 ops/sec ±0.35% (97 runs sampled)  
+> objectMapSymbol x 532,465 ops/sec ±0.21% (97 runs sampled)  
 
 They start to equalize, but with Pac-o-Pack the objective is to have near 0 misses, using dictionaries (almost mandatory) and/or the `mapKey` option (depending on your use case), so I'm keeping my _objectMapSymbol_ method.
 
